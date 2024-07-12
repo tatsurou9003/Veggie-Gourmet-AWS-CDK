@@ -26,5 +26,5 @@ def recipe_lambda(event, context):
 
     return {
         'statusCode': 200,
-        'body': response_body
+        'body': json.dumps(response_body)
     }
