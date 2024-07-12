@@ -15,7 +15,7 @@ def recipe_lambda(event, context):
             "messages": [
                 {
                     "role": "user",
-                    "content": "野菜を使ったレシピを教えてください"
+                    "content": "野菜を使ったレシピを1つ教えてください"
                 }
         ]
         }  
@@ -26,5 +26,5 @@ def recipe_lambda(event, context):
 
     return {
         'statusCode': 200,
-        'body': json.dumps(response_body)
+        'body': json.dumps(response_body, ensure_ascii=False)
     }
