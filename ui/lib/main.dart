@@ -14,8 +14,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Veggie Gourmet',
       debugShowCheckedModeBanner: false,
-      theme:
-          ThemeData(primarySwatch: Colors.lightGreen, fontFamily: 'NotoSansJP'),
+      theme: ThemeData(fontFamily: 'NotoSansJP'),
       home: LoginPage(),
     );
   }
