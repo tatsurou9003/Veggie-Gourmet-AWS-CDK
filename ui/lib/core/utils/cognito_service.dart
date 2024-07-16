@@ -7,7 +7,7 @@ class AuthService {
     dotenv.env['CLIENT_ID']!,
   );
 
-  // サインアップ（新規ユーザー登録）
+  // サインアップ
   Future<bool> signUp(String email, String password) async {
     try {
       final userAttributes = [
@@ -24,19 +24,58 @@ class AuthService {
 
   // サインアップ確認
   Future<bool> confirmSignUp(String email, String confirmationCode) async {
-    // ユーザーの登録を確認コードで確認する
+    final cognitoUser = CognitoUser(email, userPool);
+    try {
+      return await cognitoUser.confirmRegistration(confirmationCode);
+    } catch (e) {
+      print('Error: $e');
+      return false;
+    }
   }
 
   // サインイン（ログイン）
-  Future<CognitoUserSession?> signIn(String email, String password) async {}
+  Future<CognitoUserSession?> signIn(String email, String password) async {
+    try {
+      final cognitoUser = CognitoUser(email, userPool);
+      final authDetails = AuthenticationDetails(
+        username: email,
+        password: password,
+      );
+      final session = await cognitoUser.authenticateUser(authDetails);
+      return session;
+    } catch (e) {
+      print('Sign in failed: $e');
+      return null;
+    }
+  }
 
   // サインアウト（ログアウト）
   Future<bool> signOut() async {
-    // 現在のユーザーをログアウトさせる
+    try {
+      final cognitoUser = await userPool.getCurrentUser();
+      if (cognitoUser != null) {
+        await cognitoUser.signOut();
+        return true;
+      }
+      return false;
+    } catch (e) {
+      print('Sign out failed: $e');
+      return false;
+    }
   }
 
   // ログイン状態チェック
   Future<bool> isLoggedIn() async {
-    // 現在のユーザーがログイン中かどうかを確認する
+    final cognitoUser = await userPool.getCurrentUser();
+    if (cognitoUser == null) {
+      return false;
+    }
+    try {
+      final session = await cognitoUser.getSession();
+      return session!.isValid();
+    } catch (e) {
+      print(e);
+      return false;
+    }
   }
 }
