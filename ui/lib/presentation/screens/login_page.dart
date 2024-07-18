@@ -74,11 +74,11 @@ class _LoginPageState extends State<LoginPage> {
             children: [
               TextFormField(
                 controller: _emailController,
-                decoration: const InputDecoration(labelText: 'Email'),
+                decoration: const InputDecoration(labelText: 'メールアドレス'),
                 keyboardType: TextInputType.emailAddress,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'メールアドレスを入力してください';
+                    return 'メールアドレスを入力してね';
                   }
                   if (!value.contains('@') || !value.contains('.')) {
                     return '正しいメールアドレスを入力してね';
@@ -89,14 +89,14 @@ class _LoginPageState extends State<LoginPage> {
               const SizedBox(height: 20),
               TextFormField(
                 controller: _passwordController,
-                decoration: const InputDecoration(labelText: 'Password'),
+                decoration: const InputDecoration(labelText: 'パスワード'),
                 obscureText: true,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'パスワードを入力してください';
+                    return 'パスワードを入力してね';
                   }
                   if (value.length < 8) {
-                    return 'パスワードは8文字以上である必要があります';
+                    return 'パスワードは8文字以上にしてね';
                   }
                   return null;
                 },
