@@ -16,6 +16,7 @@ class _LoginPageState extends State<LoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLogin = true;
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -26,37 +27,46 @@ class _LoginPageState extends State<LoginPage> {
 
   void _submitForm() async {
     if (_formKey.currentState!.validate()) {
-      final email = _emailController.text;
-      final password = _passwordController.text;
+      setState(() {
+        _isLoading = true;
+      });
+      try {
+        final email = _emailController.text;
+        final password = _passwordController.text;
 
-      if (_isLogin) {
-        final session = await authService.signIn(email, password);
-        if (session != null) {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(
-              builder: (context) => Home(),
-            ),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('ログインに失敗しました')),
-          );
-        }
-      } else {
-        final signUpResult = await authService.signUp(email, password);
-        if (signUpResult) {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => ConfirmationPage(
-                email: email,
+        if (_isLogin) {
+          final session = await authService.signIn(email, password);
+          if (session != null) {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(
+                builder: (context) => Home(),
               ),
-            ),
-          );
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('ログインに失敗しました')),
+            );
+          }
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('${signUpResult}')),
-          );
+          final signUpResult = await authService.signUp(email, password);
+          if (signUpResult) {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => ConfirmationPage(
+                  email: email,
+                ),
+              ),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('サインアップに失敗しました')),
+            );
+          }
         }
+      } finally {
+        setState(() {
+          _isLoading = false;
+        });
       }
     }
   }
@@ -89,68 +99,72 @@ class _LoginPageState extends State<LoginPage> {
         backgroundColor: const Color.fromARGB(255, 219, 245, 153),
         appBar: AppBar(
           title: Text(_isLogin ? 'ログイン' : 'サインアップ'),
+          backgroundColor: const Color.fromARGB(255, 219, 245, 153),
         ),
-        body: Form(
-          key: _formKey,
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  TextFormField(
-                    controller: _emailController,
-                    decoration: const InputDecoration(labelText: 'メールアドレス'),
-                    keyboardType: TextInputType.emailAddress,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'メールアドレスを入力してね';
-                      }
-                      if (!value.contains('@') || !value.contains('.')) {
-                        return '正しいメールアドレスを入力してね';
-                      }
-                      return null;
-                    },
+        body: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : Form(
+                key: _formKey,
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        TextFormField(
+                          controller: _emailController,
+                          decoration:
+                              const InputDecoration(labelText: 'メールアドレス'),
+                          keyboardType: TextInputType.emailAddress,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'メールアドレスを入力してね';
+                            }
+                            if (!value.contains('@') || !value.contains('.')) {
+                              return '正しいメールアドレスを入力してね';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 20),
+                        TextFormField(
+                            controller: _passwordController,
+                            decoration: const InputDecoration(
+                              labelText: 'パスワード',
+                            ),
+                            obscureText: true,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'パスワードを入力してね';
+                              }
+                            }),
+                        if (!_isLogin) ...[
+                          const SizedBox(height: 20),
+                          TextFormField(
+                              decoration: const InputDecoration(
+                                  labelText: 'パスワード（確認）',
+                                  helperText: '8文字以上、大文字・小文字・数字・特殊文字を含めてね'),
+                              obscureText: true,
+                              validator: _validatePassword),
+                        ],
+                        const SizedBox(height: 40),
+                        ElevatedButton(
+                          onPressed: _submitForm,
+                          child: Text(_isLogin ? 'ログイン' : 'サインアップ'),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            setState(() {
+                              _isLogin = !_isLogin;
+                            });
+                          },
+                          child: Text(_isLogin
+                              ? 'アカウント持ってないの? サインアップしてね'
+                              : 'アカウント持ってるの? ログインしてね'),
+                        )
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 20),
-                  TextFormField(
-                      controller: _passwordController,
-                      decoration: const InputDecoration(
-                        labelText: 'パスワード',
-                      ),
-                      obscureText: true,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'パスワードを入力してね';
-                        }
-                      }),
-                  if (!_isLogin) ...[
-                    const SizedBox(height: 20),
-                    TextFormField(
-                        decoration: const InputDecoration(
-                            labelText: 'パスワード（確認）',
-                            helperText: '8文字以上、大文字・小文字・数字・特殊文字を含めてね'),
-                        obscureText: true,
-                        validator: _validatePassword),
-                  ],
-                  const SizedBox(height: 40),
-                  ElevatedButton(
-                    onPressed: _submitForm,
-                    child: Text(_isLogin ? 'ログイン' : 'サインアップ'),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      setState(() {
-                        _isLogin = !_isLogin;
-                      });
-                    },
-                    child: Text(_isLogin
-                        ? 'アカウント持ってないの? サインアップしてね'
-                        : 'アカウント持ってるの? ログインしてね'),
-                  )
-                ],
-              ),
-            ),
-          ),
-        ));
+                ),
+              ));
   }
 }
