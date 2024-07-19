@@ -43,8 +43,8 @@ class _LoginPageState extends State<LoginPage> {
           );
         }
       } else {
-        final signUpSuccessful = await authService.signUp(email, password);
-        if (signUpSuccessful) {
+        final signUpResult = await authService.signUp(email, password);
+        if (signUpResult) {
           Navigator.of(context).push(
             MaterialPageRoute(
               builder: (context) => ConfirmationPage(
@@ -54,11 +54,33 @@ class _LoginPageState extends State<LoginPage> {
           );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('サインアップに失敗しました')),
+            SnackBar(content: Text('${signUpResult}')),
           );
         }
       }
     }
+  }
+
+  String? _validatePassword(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'パスワードを入力してね';
+    }
+    if (value.length < 8) {
+      return 'パスワードは8文字以上にしてね';
+    }
+    if (!value.contains(RegExp(r'[A-Z]'))) {
+      return 'パスワードには大文字を含めてね';
+    }
+    if (!value.contains(RegExp(r'[a-z]'))) {
+      return 'パスワードには小文字を含めてね';
+    }
+    if (!value.contains(RegExp(r'[0-9]'))) {
+      return 'パスワードには数字を含めてね';
+    }
+    if (!value.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'))) {
+      return 'パスワードには特殊文字を含めてね';
+    }
+    return null;
   }
 
   @override
@@ -66,59 +88,68 @@ class _LoginPageState extends State<LoginPage> {
     return Scaffold(
         backgroundColor: const Color.fromARGB(255, 219, 245, 153),
         appBar: AppBar(
-          title: Text(_isLogin ? 'Login' : 'Sign Up'),
+          title: Text(_isLogin ? 'ログイン' : 'サインアップ'),
         ),
         body: Form(
           key: _formKey,
-          child: Column(
-            children: [
-              TextFormField(
-                controller: _emailController,
-                decoration: const InputDecoration(labelText: 'メールアドレス'),
-                keyboardType: TextInputType.emailAddress,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'メールアドレスを入力してね';
-                  }
-                  if (!value.contains('@') || !value.contains('.')) {
-                    return '正しいメールアドレスを入力してね';
-                  }
-                  return null;
-                },
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  TextFormField(
+                    controller: _emailController,
+                    decoration: const InputDecoration(labelText: 'メールアドレス'),
+                    keyboardType: TextInputType.emailAddress,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'メールアドレスを入力してね';
+                      }
+                      if (!value.contains('@') || !value.contains('.')) {
+                        return '正しいメールアドレスを入力してね';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 20),
+                  TextFormField(
+                      controller: _passwordController,
+                      decoration: const InputDecoration(
+                        labelText: 'パスワード',
+                      ),
+                      obscureText: true,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'パスワードを入力してね';
+                        }
+                      }),
+                  if (!_isLogin) ...[
+                    const SizedBox(height: 20),
+                    TextFormField(
+                        decoration: const InputDecoration(
+                            labelText: 'パスワード（確認）',
+                            helperText: '8文字以上、大文字・小文字・数字・特殊文字を含めてね'),
+                        obscureText: true,
+                        validator: _validatePassword),
+                  ],
+                  const SizedBox(height: 40),
+                  ElevatedButton(
+                    onPressed: _submitForm,
+                    child: Text(_isLogin ? 'ログイン' : 'サインアップ'),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      setState(() {
+                        _isLogin = !_isLogin;
+                      });
+                    },
+                    child: Text(_isLogin
+                        ? 'アカウント持ってないの? サインアップしてね'
+                        : 'アカウント持ってるの? ログインしてね'),
+                  )
+                ],
               ),
-              const SizedBox(height: 20),
-              TextFormField(
-                controller: _passwordController,
-                decoration: const InputDecoration(labelText: 'パスワード'),
-                obscureText: true,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'パスワードを入力してね';
-                  }
-                  if (value.length < 8) {
-                    return 'パスワードは8文字以上にしてね';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(
-                height: 40,
-              ),
-              ElevatedButton(
-                onPressed: _submitForm,
-                child: Text(_isLogin ? 'ログイン' : 'サインアップ'),
-              ),
-              TextButton(
-                onPressed: () {
-                  setState(() {
-                    _isLogin = !_isLogin;
-                  });
-                },
-                child: Text(_isLogin
-                    ? 'アカウント持ってないの? サインアップしてね'
-                    : 'アカウント持ってるの? ログインしてね'),
-              )
-            ],
+            ),
           ),
         ));
   }

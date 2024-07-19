@@ -1,6 +1,13 @@
 import 'package:amazon_cognito_identity_dart_2/cognito.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
+class SignUpResult {
+  final bool success;
+  final String? errorMessage;
+
+  SignUpResult({required this.success, this.errorMessage});
+}
+
 class AuthService {
   final userPool = CognitoUserPool(
     dotenv.env['POOL_ID']!,
@@ -15,21 +22,40 @@ class AuthService {
       ];
       final result = await userPool.signUp(email, password,
           userAttributes: userAttributes);
-      return result.userConfirmed ?? false;
+      print("Sign up successful: $result");
+      return true;
     } catch (e) {
-      print('Error: $e');
+      print("Sign up error: $e");
+      return false;
     }
-    return false;
   }
 
   // サインアップ確認
   Future<bool> confirmSignUp(String email, String confirmationCode) async {
-    final cognitoUser = CognitoUser(email, userPool);
     try {
-      return await cognitoUser.confirmRegistration(confirmationCode);
+      final cognitoUser = CognitoUser(email, userPool);
+      final result = await cognitoUser.confirmRegistration(confirmationCode);
+      return result;
     } catch (e) {
-      print('Error: $e');
+      if (e is CognitoClientException) {
+        print("エラー: ${e.message}, code: ${e.code}, name: ${e.name}");
+      } else {
+        print("Unknownエラー: $e");
+      }
       return false;
+    }
+  }
+
+  // 確認コード再送信
+  Future<void> resendConfirmationCode(String email) async {
+    print("Attempting to resend confirmation code to: $email");
+    try {
+      final cognitoUser = CognitoUser(email, userPool);
+      final result = await cognitoUser.resendConfirmationCode();
+      print("Resend confirmation code result: $result");
+    } catch (e) {
+      print("Error resending confirmation code: $e");
+      throw e;
     }
   }
 
