@@ -1,17 +1,55 @@
 import json
 import boto3
 import os
+import pytz
 from datetime import datetime
 
 dynamodb = boto3.resource('dynamodb')
-post_table = dynamodb.Table(os.environ['POST_TABLE_NAME'])
+recipe_table = dynamodb.Table(os.environ['RECIPE_TABLE_NAME'])
 like_table = dynamodb.Table(os.environ['LIKE_TABLE_NAME'])
 
 def post_recipe(event, context):    
-    return {
-        'statusCode': 200,
-        'body': json.dumps({'message': '${post_table} ${like_table}'})
-    }
+    try:
+        # CognitoユーザーIDを取得
+        user_id = event['requestContext']['authorizer']['claims']['sub']
+        
+        # リクエストボディからデータを取得
+        body = json.loads(event['body'])
+        recipe_id = body['recipeId']
+        recipe = body['recipe']
+        name = body['name']
+        ingredients = body['ingredients']
+        figure = body['figure']
+        
+        # 投稿時刻を追加
+        utc_now = datetime.now().isoformat()
+        jst = pytz.timezone('Asia/Tokyo')
+        jst_now = utc_now.replace(tzinfo=pytz.utc).astimezone(jst)
+        created_at = jst_now.isoformat()
+
+        recipe_table.put_item(
+            Item={
+                'recipeId': recipe_id,
+                'userId': user_id,
+                'recipe': recipe,
+                'createdAt': created_at,
+                'name': name,
+                'ingredients': ingredients,
+                'figure': figure,
+                'likesCount': 0
+            }
+        )
+
+        return {
+                'statusCode': 200,
+                'body': json.dumps({'message': 'Post created successfully'})
+            }
+    except Exception as e:
+        return {
+            'statusCode': 500,
+            'body': json.dumps({'message': 'Failed to create post'})
+        }
+
 
 # eventの中身(生成したrecipeのテキストにFlutterがパラメータを付加したもの)
 # {
@@ -24,9 +62,3 @@ def post_recipe(event, context):
 #   "ingredients": "tomato,cucumber,eggplant",
 #   "figure": "https://vegmet-bucket.s3.ap-northeast-1.amazonaws.com/salad.jpg",
 # }
-
-# テスト用JWTトークン取得コマンド
-# aws cognito-idp initiate-auth \
-#     --auth-flow USER_PASSWORD_AUTH \
-#     --client-id exampleclientid \
-#     --auth-parameters USERNAME=user@example.com,PASSWORD=examplepassword

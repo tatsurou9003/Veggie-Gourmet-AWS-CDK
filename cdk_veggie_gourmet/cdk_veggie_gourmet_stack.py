@@ -92,7 +92,7 @@ class CdkVeggieGourmetStack(Stack):
             code=_lambda.Code.from_asset("lambda"),
             timeout=Duration.seconds(30),
             environment={
-                'POST_TABLE_NAME': recipe_table.table_name,
+                'RECIPE_TABLE_NAME': recipe_table.table_name,
                 'LIKE_TABLE_NAME': like_table.table_name
             }
         )
