@@ -3,10 +3,10 @@ import boto3
 import os
 import pytz
 from datetime import datetime
+import uuid
 
 dynamodb = boto3.resource('dynamodb')
 recipe_table = dynamodb.Table(os.environ['RECIPE_TABLE_NAME'])
-like_table = dynamodb.Table(os.environ['LIKE_TABLE_NAME'])
 
 def post_recipe(event, context):    
     try:
@@ -15,7 +15,7 @@ def post_recipe(event, context):
         
         # リクエストボディからデータを取得
         body = json.loads(event['body'])
-        recipe_id = body['recipeId']
+        recipe_id = str(uuid.uuid4())
         recipe = body['recipe']
         name = body['name']
         ingredients = body['ingredients']
