@@ -9,11 +9,19 @@ from aws_cdk import (
     RemovalPolicy
 )
 from constructs import Construct
+import os
+from dotenv import load_dotenv
 
 class CdkVeggieGourmetStack(Stack):
 
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
+
+        load_dotenv()
+        user_pool_id = os.getenv('USER_POOL_ID')
+
+        # Cognito User Poolを参照
+        user_pool = cognito.UserPool.from_user_pool_id(self, "UserPool", user_pool_id)
 
         # DynamoDB Table
         recipe_table = dynamodb.Table(self, "RecipeTable",
@@ -70,18 +78,24 @@ class CdkVeggieGourmetStack(Stack):
             rest_api_name="VeggieGourmetApi",
         )
 
+        # Cognitoオーソライザーの作成
+        cognito_authorizer = apigateway.CognitoUserPoolsAuthorizer(
+            self, "CognitoAuthorizer",
+            cognito_user_pools=[user_pool]
+        )
+
         #recipe生成用のLambda関数 
-        recipe_lambda = _lambda.Function(
+        generate_lambda = _lambda.Function(
             self, "RecipeLambda",
             runtime=_lambda.Runtime.PYTHON_3_12,
-            handler="recipe.recipe_lambda",
+            handler="generate_recipe.generate_recipe",
             code=_lambda.Code.from_asset("lambda"),
             timeout=Duration.seconds(30),
             role = lambda_role
         )
-        recipe_integration = apigateway.LambdaIntegration(recipe_lambda)
-        recipe_resource = api.root.add_resource("generate-recipe")
-        recipe_resource.add_method("GET", recipe_integration)
+        generate_integration = apigateway.LambdaIntegration(generate_lambda)
+        generate_resource = api.root.add_resource("generate-recipe")
+        generate_resource.add_method("POST", generate_integration, authorization_type=apigateway.AuthorizationType.COGNITO, authorizer=cognito_authorizer)
 
 
         #recipe投稿用のLambda関数
@@ -98,7 +112,7 @@ class CdkVeggieGourmetStack(Stack):
         )
         post_integration = apigateway.LambdaIntegration(post_lambda)
         post_resource = api.root.add_resource("post-recipe")
-        post_resource.add_method("POST", post_integration)
+        post_resource.add_method("POST", post_integration, authorization_type=apigateway.AuthorizationType.COGNITO, authorizer=cognito_authorizer)
 
         #recipe投稿用のLambda関数にDynamoDBの権限を付与
         recipe_table.grant_write_data(post_lambda)
@@ -115,7 +129,7 @@ class CdkVeggieGourmetStack(Stack):
         )
         get_integration = apigateway.LambdaIntegration(get_lambda)
         get_resource = api.root.add_resource("get-recipe")
-        get_resource.add_method("GET", get_integration)
+        get_resource.add_method("GET", get_integration, authorization_type=apigateway.AuthorizationType.COGNITO, authorizer=cognito_authorizer)
         
         #recipe全件取得用のLambda関数にDynamoDBの読み取り権限を付与
         recipe_table.grant_read_data(get_lambda)

@@ -19,7 +19,7 @@ def post_recipe(event, context):
         recipe = body['recipe']
         name = body['name']
         ingredients = body['ingredients']
-        figure = body['figure']
+        figure = "https://vegmet-bucket.s3.ap-northeast-1.amazonaws.com/salad.jpg"
         
         # 投稿時刻を追加
         utc_now = datetime.now().isoformat()
