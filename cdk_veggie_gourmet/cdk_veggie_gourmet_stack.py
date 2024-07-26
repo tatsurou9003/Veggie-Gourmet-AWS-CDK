@@ -86,7 +86,7 @@ class CdkVeggieGourmetStack(Stack):
 
         #recipe生成用のLambda関数 
         generate_lambda = _lambda.Function(
-            self, "RecipeLambda",
+            self, "GenerateLambda",
             runtime=_lambda.Runtime.PYTHON_3_12,
             handler="generate_recipe.generate_recipe",
             code=_lambda.Code.from_asset("lambda"),
