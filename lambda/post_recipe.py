@@ -1,8 +1,7 @@
 import json
 import boto3
 import os
-import pytz
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 import uuid
 
 dynamodb = boto3.resource('dynamodb')
@@ -22,11 +21,10 @@ def post_recipe(event, context):
         figure = "https://vegmet-bucket.s3.ap-northeast-1.amazonaws.com/salad.jpg"
         
         # 投稿時刻を追加
-        utc_now = datetime.now().isoformat()
-        jst = pytz.timezone('Asia/Tokyo')
-        jst_now = utc_now.replace(tzinfo=pytz.utc).astimezone(jst)
+        utc_now = datetime.now(timezone.utc)
+        jst_now = utc_now.astimezone(timezone(timedelta(hours=9)))
         created_at = jst_now.isoformat()
-
+        
         recipe_table.put_item(
             Item={
                 'recipeId': recipe_id,
