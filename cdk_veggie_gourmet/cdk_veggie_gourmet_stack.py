@@ -119,16 +119,20 @@ class CdkVeggieGourmetStack(Stack):
         like_table.grant_write_data(post_lambda)
 
 
-        #recipe全件取得用のLambda関数
+        #recipeページネーション取得用のLambda関数
         get_lambda = _lambda.Function(
             self, "GetLambda",
             runtime=_lambda.Runtime.PYTHON_3_12,
-            handler="get_recipe.get_recipe",
+            handler="get_recipes.get_recipes",
             code=_lambda.Code.from_asset("lambda"),
             timeout=Duration.seconds(30),
+            environment={
+                'RECIPE_TABLE_NAME': recipe_table.table_name,
+                'LIKE_TABLE_NAME': like_table.table_name
+            }
         )
         get_integration = apigateway.LambdaIntegration(get_lambda)
-        get_resource = api.root.add_resource("get-recipe")
+        get_resource = api.root.add_resource("get-recipes")
         get_resource.add_method("GET", get_integration, authorization_type=apigateway.AuthorizationType.COGNITO, authorizer=cognito_authorizer)
         
         #recipe全件取得用のLambda関数にDynamoDBの読み取り権限を付与
