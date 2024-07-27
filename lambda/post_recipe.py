@@ -14,7 +14,7 @@ def post_recipe(event, context):
         
         # リクエストボディからデータを取得
         body = json.loads(event['body'])
-        recipe_id = str(uuid.uuid4())
+        recipe_id = f"RECIPE#{str(uuid.uuid4())}"
         recipe = body['recipe']
         name = body['name']
         ingredients = body['ingredients']
