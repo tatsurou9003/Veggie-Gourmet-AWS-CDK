@@ -8,17 +8,24 @@ recipe_table = dynamodb.Table(os.environ['RECIPE_TABLE_NAME'])
 
 def get_recipes(event, context):
     try:
-        exclusive_start_key = event.get('queryStringParameters', {}).get('lastEvaluatedKey')
+        print(event)
+        query_string_parameters = event.get('queryStringParameters')
+        exclusive_start_key = None
+        
+        if query_string_parameters:
+            exclusive_start_key = query_string_parameters.get('lastEvaluatedKey')
+            
         query_params = {
             'KeyConditionExpression': Key('recipeId').begins_with('RECIPE#'),
             'ScanIndexForward': False,
-            'Limit': 10
+            'Limit': 5
         }
         
         if exclusive_start_key:
             query_params['ExclusiveStartKey'] = json.loads(exclusive_start_key)
         
         response = recipe_table.query(**query_params)
+        print(response)
         
         items = response.get('Items', [])
         last_evaluated_key = response.get('LastEvaluatedKey')
@@ -36,7 +43,7 @@ def get_recipes(event, context):
     except Exception as e:
         return {
             'statusCode': 500,
-            'body': json.dumps({'error': 'Internal Server Error'}),
+            'body': json.dumps({'error': str(e)}),
             'headers': {
                 'Content-Type': 'application/json'
             }

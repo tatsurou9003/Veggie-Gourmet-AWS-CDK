@@ -45,7 +45,7 @@ def post_recipe(event, context):
     except Exception as e:
         return {
             'statusCode': 500,
-            'body': json.dumps({'message': 'Failed to create post'})
+            'body': json.dumps({'message': 'Failed to create post', 'error': str(e)})
         }
 
 
