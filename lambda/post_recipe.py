@@ -14,7 +14,6 @@ def post_recipe(event, context):
         
         # リクエストボディからデータを取得
         body = json.loads(event['body'])
-        recipe_id = f"RECIPE#{str(uuid.uuid4())}"
         recipe = body['recipe']
         name = body['name']
         ingredients = body['ingredients']
@@ -27,7 +26,7 @@ def post_recipe(event, context):
         
         recipe_table.put_item(
             Item={
-                'recipeId': recipe_id,
+                'partitionKey': "RECIPE",
                 'userId': user_id,
                 'recipe': recipe,
                 'createdAt': created_at,
@@ -60,3 +59,27 @@ def post_recipe(event, context):
 #   "ingredients": "tomato,cucumber,eggplant",
 #   "figure": "https://vegmet-bucket.s3.ap-northeast-1.amazonaws.com/salad.jpg",
 # }
+# 玉ねぎ,ニンジン,レタス,主菜,温かい
+# 0
+# 普通の野菜スープ
+# 野菜を切って出汁で煮込む
+
+# ナス,トマト,キュウリ,主菜,冷たい
+# 0
+# 塩サラダ
+# 野菜をちぎって塩をかける
+
+# ナス,ニンジン,じゃがいも,副菜,冷たい
+# 0
+# ただの野菜スティック
+# 野菜を棒状に切って器にブッ刺す
+
+# 玉ねぎ,トマト,レタス,主菜,冷たい
+# 0
+# TDNサラダ
+# 野菜を切ってドレッシングをぶっかける
+
+# きのこ,トマト,キュウリ,主菜,温かい
+# 0
+# きのこサラダ
+# magic mashroom

@@ -25,7 +25,7 @@ class CdkVeggieGourmetStack(Stack):
 
         # DynamoDB Table
         recipe_table = dynamodb.Table(self, "RecipeTable",
-            partition_key=dynamodb.Attribute(name="recipeId", type=dynamodb.AttributeType.STRING),
+            partition_key=dynamodb.Attribute(name="userId", type=dynamodb.AttributeType.STRING),
             sort_key=dynamodb.Attribute(name="createdAt", type=dynamodb.AttributeType.STRING),
             billing_mode=dynamodb.BillingMode.PAY_PER_REQUEST,
             removal_policy=RemovalPolicy.DESTROY,
@@ -34,7 +34,7 @@ class CdkVeggieGourmetStack(Stack):
         # GSI（Global Secondary Index）の追加
         recipe_table.add_global_secondary_index(
             index_name="RecipeIndex",
-            partition_key=dynamodb.Attribute(name="userId", type=dynamodb.AttributeType.STRING),
+            partition_key=dynamodb.Attribute(name="partitionKey", type=dynamodb.AttributeType.STRING),
             sort_key=dynamodb.Attribute(name="createdAt", type=dynamodb.AttributeType.STRING)
         )
 

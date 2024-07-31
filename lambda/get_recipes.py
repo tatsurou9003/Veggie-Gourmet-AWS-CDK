@@ -11,12 +11,14 @@ def get_recipes(event, context):
         print(event)
         query_string_parameters = event.get('queryStringParameters')
         exclusive_start_key = None
+        index_name="RecipeIndex"
         
         if query_string_parameters:
             exclusive_start_key = query_string_parameters.get('lastEvaluatedKey')
             
         query_params = {
-            'KeyConditionExpression': Key('recipeId').begins_with('RECIPE#'),
+            'IndexName': index_name,
+            'KeyConditionExpression': Key('partitionKey').eq('RECIPE'),
             'ScanIndexForward': False,
             'Limit': 5
         }
