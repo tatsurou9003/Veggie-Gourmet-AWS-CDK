@@ -1,4 +1,5 @@
 import json
+from decimal import Decimal
 import os
 from boto3.dynamodb.conditions import Key
 import boto3
@@ -6,9 +7,13 @@ import boto3
 dynamodb = boto3.resource('dynamodb')
 recipe_table = dynamodb.Table(os.environ['RECIPE_TABLE_NAME'])
 
+def decimal_default(obj):
+    if isinstance(obj, Decimal):
+        return float(obj)
+    raise TypeError
+
 def get_recipes(event, context):
     try:
-        print(event)
         query_string_parameters = event.get('queryStringParameters')
         exclusive_start_key = None
         index_name="RecipeIndex"
@@ -37,7 +42,7 @@ def get_recipes(event, context):
             'body': json.dumps({
                 'recipes': items,
                 'lastEvaluatedKey': last_evaluated_key
-            }),
+            }, default=decimal_default, ensure_ascii=False),
             'headers': {
                 'Content-Type': 'application/json'
             }
