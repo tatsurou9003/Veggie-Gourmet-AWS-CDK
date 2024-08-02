@@ -24,6 +24,7 @@ class CdkVeggieGourmetStack(Stack):
         user_pool = cognito.UserPool.from_user_pool_id(self, "UserPool", user_pool_id)
 
         # DynamoDB Table
+        # ユーザーごとのレシピを取得
         recipe_table = dynamodb.Table(self, "RecipeTable",
             partition_key=dynamodb.Attribute(name="userId", type=dynamodb.AttributeType.STRING),
             sort_key=dynamodb.Attribute(name="createdAt", type=dynamodb.AttributeType.STRING),
@@ -31,12 +32,14 @@ class CdkVeggieGourmetStack(Stack):
             removal_policy=RemovalPolicy.DESTROY,
         )
 
-        # GSI（Global Secondary Index）の追加
+        # レシピ全件取得用のGSI
         recipe_table.add_global_secondary_index(
             index_name="RecipeIndex",
             partition_key=dynamodb.Attribute(name="partitionKey", type=dynamodb.AttributeType.STRING),
             sort_key=dynamodb.Attribute(name="createdAt", type=dynamodb.AttributeType.STRING)
         )
+
+        # レシピのいいね数取得用のGSI
 
         like_table = dynamodb.Table(self, "LikeTable",
             partition_key=dynamodb.Attribute(name="userId", type=dynamodb.AttributeType.STRING),
@@ -138,3 +141,17 @@ class CdkVeggieGourmetStack(Stack):
         #recipe全件取得用のLambda関数にDynamoDBの読み取り権限を付与
         recipe_table.grant_read_data(get_lambda)
         like_table.grant_read_data(get_lambda)
+        
+
+        #recipe削除用のLambda関数
+        delete_lambda = _lambda.Function(
+            self, "DeleteLambda",
+            runtime=_lambda.Runtime.PYTHON_3_12,
+            handler="delete_recipe.delete_recipe",
+            code=_lambda.Code.from_asset("lambda"),
+            timeout=Duration.seconds(30),
+            environment={
+                'RECIPE_TABLE_NAME': recipe_table.table_name,
+                'LIKE_TABLE_NAME': like_table.table_name
+            }
+        )

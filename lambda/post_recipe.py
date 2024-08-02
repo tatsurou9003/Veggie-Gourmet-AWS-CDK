@@ -27,6 +27,7 @@ def post_recipe(event, context):
         recipe_table.put_item(
             Item={
                 'partitionKey': "RECIPE",
+                'recipeId': str(uuid.uuid4()),
                 'userId': user_id,
                 'recipe': recipe,
                 'createdAt': created_at,

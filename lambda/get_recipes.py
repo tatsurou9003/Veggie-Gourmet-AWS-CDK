@@ -12,6 +12,8 @@ def decimal_default(obj):
         return float(obj)
     raise TypeError
 
+# DynamoDBのテーブル定義で、同時刻（コンマ数秒）のデータが複数ある場合エラーになるという致命的なバグがある。
+# scanの方が確実だが、パフォーマンス上の問題があるため、今回はqueryを使用する。個人開発だし。
 def get_recipes(event, context):
     try:
         query_string_parameters = event.get('queryStringParameters')
