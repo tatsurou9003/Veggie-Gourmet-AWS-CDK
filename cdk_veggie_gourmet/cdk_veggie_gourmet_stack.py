@@ -24,38 +24,57 @@ class CdkVeggieGourmetStack(Stack):
         user_pool = cognito.UserPool.from_user_pool_id(self, "UserPool", user_pool_id)
 
         # DynamoDB Table
-        # ユーザーごとのレシピを取得
-        recipe_table = dynamodb.Table(self, "RecipeTable",
+        # ユーザー
+        user_table = dynamodb.Table(self, "UserTable",
             partition_key=dynamodb.Attribute(name="userId", type=dynamodb.AttributeType.STRING),
-            sort_key=dynamodb.Attribute(name="createdAt", type=dynamodb.AttributeType.STRING),
+            billing_mode=dynamodb.BillingMode.PAY_PER_REQUEST,
+            removal_policy=RemovalPolicy.DESTROY
+        )
+
+        # レシピ1件取得用
+        recipe_table = dynamodb.Table(self, "RecipeTable",
+            partition_key=dynamodb.Attribute(name="recipeId", type=dynamodb.AttributeType.STRING),
             billing_mode=dynamodb.BillingMode.PAY_PER_REQUEST,
             removal_policy=RemovalPolicy.DESTROY,
         )
 
-        # レシピ全件取得用のGSI
+        # レシピ全件取得用
         recipe_table.add_global_secondary_index(
-            index_name="RecipeIndex",
-            partition_key=dynamodb.Attribute(name="partitionKey", type=dynamodb.AttributeType.STRING),
+            index_name="GetAllIndex",
+            partition_key=dynamodb.Attribute(name="type", type=dynamodb.AttributeType.STRING),
             sort_key=dynamodb.Attribute(name="createdAt", type=dynamodb.AttributeType.STRING)
         )
 
-        # レシピのいいね数取得用のGSI
-
-        like_table = dynamodb.Table(self, "LikeTable",
+        # ユーザー毎のレシピ取得用
+        recipe_table.add_global_secondary_index(
+            index_name="UserRecipeIndex",
             partition_key=dynamodb.Attribute(name="userId", type=dynamodb.AttributeType.STRING),
-            sort_key=dynamodb.Attribute(name="recipeId", type=dynamodb.AttributeType.STRING),
+            sort_key=dynamodb.Attribute(name="createdAt", type=dynamodb.AttributeType.STRING)
+        )
+        
+        # いいね
+        like_table = dynamodb.Table(self, "LikeTable",
+            partition_key=dynamodb.Attribute(name="recipeId", type=dynamodb.AttributeType.STRING),
+            sort_key=dynamodb.Attribute(name="likedAt", type=dynamodb.AttributeType.STRING),
             billing_mode=dynamodb.BillingMode.PAY_PER_REQUEST,
             removal_policy=RemovalPolicy.DESTROY
         )
-        
-        # GSI（Global Secondary Index）の追加
-        like_table.add_global_secondary_index(
-        index_name="RecipeIdIndex",
-        partition_key=dynamodb.Attribute(name="recipeId", type=dynamodb.AttributeType.STRING),
-        sort_key=dynamodb.Attribute(name="likedAt", type=dynamodb.AttributeType.STRING)
+
+        # コメント
+        comment_table = dynamodb.Table(self, "CommentTable", 
+            partition_key=dynamodb.Attribute(name="commentId", type=dynamodb.AttributeType.STRING),
+            billing_mode=dynamodb.BillingMode.PAY_PER_REQUEST,
+            removal_policy=RemovalPolicy.DESTROY
         )
 
-
+        # レシピ毎のコメント取得用
+        comment_table.add_global_secondary_index(
+            index_name="RecipeCommentIndex",
+            partition_key=dynamodb.Attribute(name="recipeId", type=dynamodb.AttributeType.STRING),
+            sort_key=dynamodb.Attribute(name="commentedAt", type=dynamodb.AttributeType.STRING)
+        )
+        
+        
         bedrock_policy = iam.PolicyStatement(
             effect= iam.Effect.ALLOW,
             actions= [
