@@ -13,6 +13,7 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final authService = AuthService();
   final _formKey = GlobalKey<FormState>();
+  final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLogin = true;
@@ -20,6 +21,7 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   void dispose() {
+    _usernameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -31,11 +33,12 @@ class _LoginPageState extends State<LoginPage> {
         _isLoading = true;
       });
       try {
+        final username = _usernameController.text;
         final email = _emailController.text;
         final password = _passwordController.text;
 
         if (_isLogin) {
-          final session = await authService.signIn(email, password);
+          final session = await authService.signIn(username, password);
           if (session != null) {
             Navigator.of(context).pushReplacement(
               MaterialPageRoute(
@@ -48,12 +51,13 @@ class _LoginPageState extends State<LoginPage> {
             );
           }
         } else {
-          final signUpResult = await authService.signUp(email, password);
+          final signUpResult =
+              await authService.signUp(username, email, password);
           if (signUpResult) {
             Navigator.of(context).push(
               MaterialPageRoute(
                 builder: (context) => ConfirmationPage(
-                  email: email,
+                  username: username,
                 ),
               ),
             );
@@ -111,20 +115,14 @@ class _LoginPageState extends State<LoginPage> {
                     child: Column(
                       children: [
                         TextFormField(
-                          controller: _emailController,
-                          decoration:
-                              const InputDecoration(labelText: 'メールアドレス'),
-                          keyboardType: TextInputType.emailAddress,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'メールアドレスを入力してね';
-                            }
-                            if (!value.contains('@') || !value.contains('.')) {
-                              return '正しいメールアドレスを入力してね';
-                            }
-                            return null;
-                          },
-                        ),
+                            controller: _usernameController,
+                            decoration:
+                                const InputDecoration(labelText: 'ユーザー名'),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'ユーザー名を入力してね';
+                              }
+                            }),
                         const SizedBox(height: 20),
                         TextFormField(
                             controller: _passwordController,
@@ -145,6 +143,24 @@ class _LoginPageState extends State<LoginPage> {
                                   helperText: '8文字以上、大文字・小文字・数字・特殊文字を含めてね'),
                               obscureText: true,
                               validator: _validatePassword),
+                          const SizedBox(height: 20),
+                          TextFormField(
+                            controller: _emailController,
+                            decoration:
+                                const InputDecoration(labelText: 'メールアドレス'),
+                            keyboardType: TextInputType.emailAddress,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'メールアドレスを入力してね';
+                              }
+                              if (!value.contains('@') ||
+                                  !value.contains('.')) {
+                                return '正しいメールアドレスを入力してね';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 20),
                         ],
                         const SizedBox(height: 40),
                         ElevatedButton(

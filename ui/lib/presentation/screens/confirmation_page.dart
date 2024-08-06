@@ -3,8 +3,8 @@ import 'package:ui/core/utils/cognito_service.dart';
 import 'home.dart';
 
 class ConfirmationPage extends StatefulWidget {
-  const ConfirmationPage({super.key, required this.email});
-  final String email;
+  const ConfirmationPage({super.key, required this.username});
+  final String username;
 
   @override
   State<ConfirmationPage> createState() => _ConfirmationPageState();
@@ -26,8 +26,8 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
       // 確認コードの送信処理
       final confirmationCode = _confirmationCodeController.text.trim();
       try {
-        bool success =
-            await AuthService().confirmSignUp(widget.email, confirmationCode);
+        bool success = await AuthService()
+            .confirmSignUp(widget.username, confirmationCode);
         if (success) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('アカウントが確認されました')),
@@ -58,7 +58,7 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
           child: Column(
             children: [
               Text(
-                '${widget.email}に送信された確認コードを入力してね',
+                '${widget.username}に送信された確認コードを入力してね',
                 style: const TextStyle(fontSize: 16),
               ),
               const SizedBox(height: 20),
@@ -81,11 +81,11 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
               ElevatedButton(
                 onPressed: () async {
                   try {
-                    await authService.resendConfirmationCode(widget.email);
+                    await authService.resendConfirmationCode(widget.username);
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                          content:
-                              Text('${widget.email}に新しい確認コードを送信したのでメールを確認してね')),
+                          content: Text(
+                              '${widget.username}に新しい確認コードを送信したのでメールを確認してね')),
                     );
                   } catch (e) {
                     ScaffoldMessenger.of(context).showSnackBar(

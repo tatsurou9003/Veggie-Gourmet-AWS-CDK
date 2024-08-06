@@ -1,13 +1,6 @@
 import 'package:amazon_cognito_identity_dart_2/cognito.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-class SignUpResult {
-  final bool success;
-  final String? errorMessage;
-
-  SignUpResult({required this.success, this.errorMessage});
-}
-
 class AuthService {
   final userPool = CognitoUserPool(
     dotenv.env['POOL_ID']!,
@@ -15,12 +8,12 @@ class AuthService {
   );
 
   // サインアップ
-  Future<bool> signUp(String email, String password) async {
+  Future<bool> signUp(String username, String email, String password) async {
     try {
       final userAttributes = [
         AttributeArg(name: 'email', value: email),
       ];
-      final result = await userPool.signUp(email, password,
+      final result = await userPool.signUp(username, password,
           userAttributes: userAttributes);
       print("Sign up successful: $result");
       return true;
@@ -31,9 +24,11 @@ class AuthService {
   }
 
   // サインアップ確認
-  Future<bool> confirmSignUp(String email, String confirmationCode) async {
+  Future<bool> confirmSignUp(String username, String confirmationCode) async {
     try {
-      final cognitoUser = CognitoUser(email, userPool);
+      print(username);
+      print(confirmationCode);
+      final cognitoUser = CognitoUser(username, userPool);
       final result = await cognitoUser.confirmRegistration(confirmationCode);
       return result;
     } catch (e) {
@@ -47,10 +42,10 @@ class AuthService {
   }
 
   // 確認コード再送信
-  Future<void> resendConfirmationCode(String email) async {
-    print("Attempting to resend confirmation code to: $email");
+  Future<void> resendConfirmationCode(String username) async {
+    print("Attempting to resend confirmation code to: $username");
     try {
-      final cognitoUser = CognitoUser(email, userPool);
+      final cognitoUser = CognitoUser(username, userPool);
       final result = await cognitoUser.resendConfirmationCode();
       print("Resend confirmation code result: $result");
     } catch (e) {
@@ -60,11 +55,11 @@ class AuthService {
   }
 
   // サインイン（ログイン）
-  Future<CognitoUserSession?> signIn(String email, String password) async {
+  Future<CognitoUserSession?> signIn(String username, String password) async {
     try {
-      final cognitoUser = CognitoUser(email, userPool);
+      final cognitoUser = CognitoUser(username, userPool);
       final authDetails = AuthenticationDetails(
-        username: email,
+        username: username,
         password: password,
       );
       final session = await cognitoUser.authenticateUser(authDetails);
