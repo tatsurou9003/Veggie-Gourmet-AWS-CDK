@@ -26,12 +26,13 @@ def post_recipe(event, context):
         
         recipe_table.put_item(
             Item={
-                'partitionKey': "RECIPE",
                 'recipeId': str(uuid.uuid4()),
+                'type': "RECIPE",
                 'userId': user_id,
+                'userName': "匿名",
+                'name': name,
                 'recipe': recipe,
                 'createdAt': created_at,
-                'name': name,
                 'ingredients': ingredients,
                 'figure': figure,
                 'likesCount': 0

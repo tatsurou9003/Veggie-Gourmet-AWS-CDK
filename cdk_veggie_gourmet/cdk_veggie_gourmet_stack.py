@@ -42,14 +42,16 @@ class CdkVeggieGourmetStack(Stack):
         recipe_table.add_global_secondary_index(
             index_name="GetAllIndex",
             partition_key=dynamodb.Attribute(name="type", type=dynamodb.AttributeType.STRING),
-            sort_key=dynamodb.Attribute(name="createdAt", type=dynamodb.AttributeType.STRING)
+            sort_key=dynamodb.Attribute(name="createdAt", type=dynamodb.AttributeType.STRING),
+            projection_type=dynamodb.ProjectionType.ALL
         )
 
         # ユーザー毎のレシピ取得用
         recipe_table.add_global_secondary_index(
             index_name="UserRecipeIndex",
             partition_key=dynamodb.Attribute(name="userId", type=dynamodb.AttributeType.STRING),
-            sort_key=dynamodb.Attribute(name="createdAt", type=dynamodb.AttributeType.STRING)
+            sort_key=dynamodb.Attribute(name="createdAt", type=dynamodb.AttributeType.STRING),
+            projection_type=dynamodb.ProjectionType.ALL
         )
         
         # いいね
@@ -58,6 +60,21 @@ class CdkVeggieGourmetStack(Stack):
             sort_key=dynamodb.Attribute(name="likedAt", type=dynamodb.AttributeType.STRING),
             billing_mode=dynamodb.BillingMode.PAY_PER_REQUEST,
             removal_policy=RemovalPolicy.DESTROY
+        )
+        
+        # コメントのいいね
+        like_table.add_global_secondary_index(
+            index_name="RecipeLikeIndex",
+            partition_key=dynamodb.Attribute(name="commentId", type=dynamodb.AttributeType.STRING),
+            sort_key=dynamodb.Attribute(name="likedAt", type=dynamodb.AttributeType.STRING),
+            projection_type=dynamodb.ProjectionType.ALL
+        )
+        
+        # ユーザーがいいねしたかどうか取得用
+        like_table.add_global_secondary_index(
+            index_name="UserLikeIndex",
+            partition_key=dynamodb.Attribute(name="userId", type=dynamodb.AttributeType.STRING),
+            projection_type=dynamodb.ProjectionType.ALL
         )
 
         # コメント
@@ -71,9 +88,10 @@ class CdkVeggieGourmetStack(Stack):
         comment_table.add_global_secondary_index(
             index_name="RecipeCommentIndex",
             partition_key=dynamodb.Attribute(name="recipeId", type=dynamodb.AttributeType.STRING),
-            sort_key=dynamodb.Attribute(name="commentedAt", type=dynamodb.AttributeType.STRING)
+            sort_key=dynamodb.Attribute(name="commentedAt", type=dynamodb.AttributeType.STRING),
+            projection_type=dynamodb.ProjectionType.ALL
         )
-        
+
         
         bedrock_policy = iam.PolicyStatement(
             effect= iam.Effect.ALLOW,
@@ -111,7 +129,7 @@ class CdkVeggieGourmetStack(Stack):
             self, "GenerateLambda",
             runtime=_lambda.Runtime.PYTHON_3_12,
             handler="generate_recipe.generate_recipe",
-            code=_lambda.Code.from_asset("lambda"),
+            code=_lambda.Code.from_asset("lambda/recipe"),
             timeout=Duration.seconds(30),
             role = lambda_role
         )
@@ -125,7 +143,7 @@ class CdkVeggieGourmetStack(Stack):
             self, "PostLambda",
             runtime=_lambda.Runtime.PYTHON_3_12,
             handler="post_recipe.post_recipe",
-            code=_lambda.Code.from_asset("lambda"),
+            code=_lambda.Code.from_asset("lambda/recipe"),
             timeout=Duration.seconds(30),
             environment={
                 'RECIPE_TABLE_NAME': recipe_table.table_name,

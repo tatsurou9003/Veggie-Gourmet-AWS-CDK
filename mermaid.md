@@ -25,7 +25,7 @@ erDiagram
 
     LIKE {
       integer recipeId "PK"
-      integer userId
+      integer userId "GSI1 PK"
       varchar createdAt "SK"
     }
 
