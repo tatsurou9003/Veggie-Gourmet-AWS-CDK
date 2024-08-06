@@ -10,3 +10,5 @@ __pycache__
 cdk.out
 
 venv/
+requests.http
+.env
