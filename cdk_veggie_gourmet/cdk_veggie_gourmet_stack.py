@@ -124,6 +124,22 @@ class CdkVeggieGourmetStack(Stack):
             cognito_user_pools=[user_pool]
         )
 
+        #user登録用のLambda関数
+        signup_lambda = _lambda.Function(
+            self, "SignupLambda",
+            runtime=_lambda.Runtime.PYTHON_3_12,
+            handler="signup.signup",
+            code=_lambda.Code.from_asset("lambda/user"),
+            timeout=Duration.seconds(30),
+            environment={
+                'USER_TABLE_NAME': user_table.table_name
+            }
+        )
+        signup_integration = apigateway.LambdaIntegration(signup_lambda)
+        signup_resource = api.root.add_resource("signup")
+        signup_resource.add_method("POST", signup_integration, authorization_type=apigateway.AuthorizationType.COGNITO, authorizer=cognito_authorizer)
+
+
         #recipe生成用のLambda関数 
         generate_lambda = _lambda.Function(
             self, "GenerateLambda",
