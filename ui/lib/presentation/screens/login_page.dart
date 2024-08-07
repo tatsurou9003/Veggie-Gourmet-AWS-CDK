@@ -56,9 +56,8 @@ class _LoginPageState extends State<LoginPage> {
           if (signUpResult) {
             Navigator.of(context).push(
               MaterialPageRoute(
-                builder: (context) => ConfirmationPage(
-                  username: username,
-                ),
+                builder: (context) =>
+                    ConfirmationPage(username: username, email: email),
               ),
             );
           } else {

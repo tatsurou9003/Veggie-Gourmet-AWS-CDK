@@ -3,8 +3,10 @@ import 'package:ui/core/utils/cognito_service.dart';
 import 'home.dart';
 
 class ConfirmationPage extends StatefulWidget {
-  const ConfirmationPage({super.key, required this.username});
+  const ConfirmationPage(
+      {super.key, required this.username, required this.email});
   final String username;
+  final String email;
 
   @override
   State<ConfirmationPage> createState() => _ConfirmationPageState();
@@ -37,7 +39,7 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
           );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('確認にできなかったのでもう一度試してね。')),
+            const SnackBar(content: Text('確認できなかったのでもう一度試してね。')),
           );
         }
       } catch (e) {
@@ -58,7 +60,7 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
           child: Column(
             children: [
               Text(
-                '${widget.username}に送信された確認コードを入力してね',
+                '${widget.email}に送信された確認コードを入力してね',
                 style: const TextStyle(fontSize: 16),
               ),
               const SizedBox(height: 20),
@@ -84,8 +86,8 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
                     await authService.resendConfirmationCode(widget.username);
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                          content: Text(
-                              '${widget.username}に新しい確認コードを送信したのでメールを確認してね')),
+                          content:
+                              Text('${widget.email}に新しい確認コードを送信したのでメールを確認してね')),
                     );
                   } catch (e) {
                     ScaffoldMessenger.of(context).showSnackBar(
