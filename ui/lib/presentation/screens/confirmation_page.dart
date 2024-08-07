@@ -3,7 +3,9 @@ import 'package:ui/core/utils/cognito_service.dart';
 import 'home.dart';
 
 class ConfirmationPage extends StatefulWidget {
-  const ConfirmationPage({super.key, required this.email});
+  const ConfirmationPage(
+      {super.key, required this.username, required this.email});
+  final String username;
   final String email;
 
   @override
@@ -26,8 +28,8 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
       // 確認コードの送信処理
       final confirmationCode = _confirmationCodeController.text.trim();
       try {
-        bool success =
-            await AuthService().confirmSignUp(widget.email, confirmationCode);
+        bool success = await AuthService()
+            .confirmSignUp(widget.username, confirmationCode);
         if (success) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('アカウントが確認されました')),
@@ -37,7 +39,7 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
           );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('確認にできなかったのでもう一度試してね。')),
+            const SnackBar(content: Text('確認できなかったのでもう一度試してね。')),
           );
         }
       } catch (e) {
@@ -81,7 +83,7 @@ class _ConfirmationPageState extends State<ConfirmationPage> {
               ElevatedButton(
                 onPressed: () async {
                   try {
-                    await authService.resendConfirmationCode(widget.email);
+                    await authService.resendConfirmationCode(widget.username);
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                           content:
